@@ -1,10 +1,31 @@
 // src/lib/cmux.js
 const { execSync, execFileSync } = require('child_process');
 
+function flattenJsonSurfaces(parsed) {
+  const out = [];
+  for (const win of (parsed.windows || [])) {
+    for (const ws of (win.workspaces || [])) {
+      const workspace = ws.title || ws.ref;
+      for (const pane of (ws.panes || [])) {
+        for (const s of (pane.surfaces || [])) {
+          out.push({
+            id: s.ref,
+            type: s.type,
+            name: s.title,
+            workspace,
+          });
+        }
+      }
+    }
+  }
+  return out;
+}
+
 function tree() {
   try {
     const raw = execSync('cmux tree --json', { encoding: 'utf8' });
-    return JSON.parse(raw);
+    const parsed = JSON.parse(raw);
+    return { surfaces: flattenJsonSurfaces(parsed) };
   } catch (e) {
     // fallback: 文本解析
     const raw = execSync('cmux tree', { encoding: 'utf8' });
@@ -62,4 +83,4 @@ function readScreen(surfaceId, lines = 5) {
   });
 }
 
-module.exports = { tree, browserEval, browserAddInitScript, browserAddScript, send, readScreen, parseTreeText };
+module.exports = { tree, browserEval, browserAddInitScript, browserAddScript, send, readScreen, parseTreeText, flattenJsonSurfaces };
