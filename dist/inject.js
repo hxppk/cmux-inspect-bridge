@@ -120,33 +120,34 @@ function buildOverlayHTML(captured, terminalSurfaces, defaultTargetRef) {
 
   return `
     <div id="${OVERLAY_ID}" style="
-      position: fixed; z-index: 999999; min-width: 360px; max-width: 480px;
+      position: fixed; z-index: 999999; width: 420px; max-width: calc(100vw - 16px);
+      box-sizing: border-box;
       background: rgba(20,20,30,0.96); color: #f0f0f5; border-radius: 8px;
       padding: 12px; font: 13px -apple-system, sans-serif;
       box-shadow: 0 8px 32px rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.1);
     ">
       <details style="margin-bottom: 8px; cursor: pointer;">
         <summary style="opacity: 0.7; word-break: break-all;">${escapeHtml(captured.selector)}</summary>
-        <pre style="margin-top: 6px; padding: 6px; background: rgba(0,0,0,0.3); overflow: auto; max-height: 120px; white-space: pre-wrap; font-size: 11px;">${escapeHtml(captured.outerHTML.slice(0, 500))}</pre>
+        <pre style="margin-top: 6px; padding: 6px; background: rgba(0,0,0,0.3); overflow: auto; max-height: 120px; white-space: pre-wrap; word-break: break-all; font-size: 11px;">${escapeHtml(captured.outerHTML.slice(0, 500))}</pre>
       </details>
       <textarea data-role="request" placeholder="描述需求..." rows="3" style="
         width: 100%; box-sizing: border-box; background: rgba(0,0,0,0.3);
         color: #fff; border: 1px solid rgba(255,255,255,0.15); border-radius: 4px;
         padding: 6px; font: inherit; resize: vertical;
       "></textarea>
-      <div style="display: flex; align-items: center; gap: 8px; margin-top: 8px;">
-        <span style="opacity: 0.6;">Target:</span>
+      <div style="display: flex; align-items: center; gap: 6px; margin-top: 8px; flex-wrap: wrap;">
+        <span style="opacity: 0.6; flex-shrink: 0;">Target:</span>
         <select data-role="target" style="
-          flex: 1; background: rgba(0,0,0,0.3); color: #fff;
+          flex: 1 1 140px; min-width: 0; background: rgba(0,0,0,0.3); color: #fff;
           border: 1px solid rgba(255,255,255,0.15); border-radius: 4px; padding: 4px;
         ">${targetOptions}</select>
         <button data-action="cancel" style="
           background: transparent; color: #aaa; border: 1px solid rgba(255,255,255,0.15);
-          padding: 4px 10px; border-radius: 4px; cursor: pointer;
+          padding: 4px 10px; border-radius: 4px; cursor: pointer; flex-shrink: 0;
         ">ESC</button>
         <button data-action="submit" style="
           background: #3b82f6; color: #fff; border: none;
-          padding: 4px 12px; border-radius: 4px; cursor: pointer; font-weight: 600;
+          padding: 4px 12px; border-radius: 4px; cursor: pointer; font-weight: 600; flex-shrink: 0;
         ">发送 ⏎</button>
       </div>
     </div>
@@ -158,13 +159,23 @@ function escapeHtml(s) {
 }
 
 function positionOverlay(overlay, anchorRect) {
-  // 默认锚定到元素右下，超出视口则镜像
-  const overlayW = overlay.offsetWidth || 400;
+  // 默认锚定到元素右下；超视口则镜像/夹紧到视口内
+  const M = 8; // viewport 边距
+  const overlayW = overlay.offsetWidth || 420;
   const overlayH = overlay.offsetHeight || 200;
-  let left = anchorRect.right + 8;
-  let top = anchorRect.bottom + 8;
-  if (left + overlayW > window.innerWidth) left = Math.max(8, anchorRect.left - overlayW - 8);
-  if (top + overlayH > window.innerHeight) top = Math.max(8, anchorRect.top - overlayH - 8);
+  const vw = window.innerWidth;
+  const vh = window.innerHeight;
+
+  // 横向：优先右下，溢出右边则改左侧；最后用 clamp 兜底
+  let left = anchorRect.right + M;
+  if (left + overlayW > vw - M) left = anchorRect.left - overlayW - M;
+  left = Math.max(M, Math.min(left, vw - overlayW - M));
+
+  // 纵向：优先下方，溢出底部则改上方；最后用 clamp 兜底
+  let top = anchorRect.bottom + M;
+  if (top + overlayH > vh - M) top = anchorRect.top - overlayH - M;
+  top = Math.max(M, Math.min(top, vh - overlayH - M));
+
   overlay.style.left = `${left}px`;
   overlay.style.top = `${top}px`;
 }
