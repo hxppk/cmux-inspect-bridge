@@ -1,4 +1,5 @@
 const OVERLAY_ID = '__cmux_inspect_overlay';
+const HIGHLIGHT_ID = '__cmux_inspect_highlight';
 
 function buildOverlayHTML(captured, terminalSurfaces, defaultTargetRef) {
   const targetOptions = terminalSurfaces.map(s => {
@@ -70,13 +71,41 @@ function positionOverlay(overlay, anchorRect) {
   overlay.style.top = `${top}px`;
 }
 
+function showHighlight(anchorRect) {
+  removeHighlight();
+  const hl = document.createElement('div');
+  hl.id = HIGHLIGHT_ID;
+  hl.style.cssText = `
+    position: fixed;
+    left: ${anchorRect.left - 2}px;
+    top: ${anchorRect.top - 2}px;
+    width: ${anchorRect.width + 4}px;
+    height: ${anchorRect.height + 4}px;
+    z-index: 999998;
+    pointer-events: none;
+    border: 2px dashed #3b82f6;
+    border-radius: 4px;
+    box-shadow: 0 0 0 9999px rgba(0,0,0,0.18), 0 0 12px rgba(59,130,246,0.6);
+    transition: opacity 0.15s;
+  `;
+  document.body.appendChild(hl);
+  return hl;
+}
+
+function removeHighlight() {
+  const old = document.getElementById(HIGHLIGHT_ID);
+  if (old) old.remove();
+}
+
 function removeOverlay() {
   const old = document.getElementById(OVERLAY_ID);
   if (old) old.remove();
+  removeHighlight();
 }
 
 function showOverlay({ captured, terminalSurfaces, defaultTargetRef, anchorRect, onSubmit, onCancel }) {
   removeOverlay();
+  showHighlight(anchorRect);
   const wrap = document.createElement('div');
   wrap.innerHTML = buildOverlayHTML(captured, terminalSurfaces, defaultTargetRef).trim();
   const overlay = wrap.firstChild;
@@ -109,5 +138,5 @@ function showOverlay({ captured, terminalSurfaces, defaultTargetRef, anchorRect,
   return overlay;
 }
 
-module.exports = { showOverlay, removeOverlay, OVERLAY_ID };
-module.exports.default = { showOverlay, removeOverlay, OVERLAY_ID };
+module.exports = { showOverlay, removeOverlay, OVERLAY_ID, HIGHLIGHT_ID };
+module.exports.default = { showOverlay, removeOverlay, OVERLAY_ID, HIGHLIGHT_ID };
