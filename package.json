@@ -1,0 +1,28 @@
+{
+  "name": "cmux-inspect-bridge",
+  "version": "0.1.0",
+  "description": "Alt+Click 元素 → 浮层提需求 → 推到 claude/qwen 输入框（替代截图工作流）",
+  "type": "commonjs",
+  "bin": {
+    "cmux-inspect-bridge": "./bin/cmux-inspect-bridge.js"
+  },
+  "scripts": {
+    "build": "node scripts/build-inject.js",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "files": [
+    "bin",
+    "src",
+    "dist",
+    "skills",
+    "README.md"
+  ],
+  "engines": {
+    "node": ">=18"
+  },
+  "devDependencies": {
+    "jsdom": "^24.0.0",
+    "vitest": "^1.6.0"
+  }
+}
