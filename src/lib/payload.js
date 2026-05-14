@@ -4,7 +4,7 @@ function singleLine(s) {
   return String(s || '').replace(/\r?\n/g, ' ');
 }
 
-export function formatPayload(item) {
+function formatPayload(item) {
   const fields = [
     `url=${singleLine(item.url)}`,
     `selector=${singleLine(item.selector)}`,
@@ -22,3 +22,5 @@ export function formatPayload(item) {
   }
   return out;
 }
+
+module.exports = { formatPayload };
