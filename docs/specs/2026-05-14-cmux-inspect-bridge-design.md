@@ -190,7 +190,8 @@ window.__cmuxInspectQueue: InspectItem[]
 2. **点发送**：把下拉选中的 `target_name` 立刻**固化**成 `target_ref = "surface:N"`（如果同名多个 surface，浮层下拉显式区分如 `qwen [surface:11]`），写完整 `InspectItem` push 进 `window.__cmuxInspectQueue` + sessionStorage 同步 + 浮层关闭。**daemon 推送时只信 target_ref，不再按 name 重解析**，避免 race 期间 surface 变化导致误送
 3. **daemon 轮询**：每 1.5s **对每个 browser surface** 单独 `cmux browser eval --surface surface:N "JSON.stringify(window.__cmuxInspectQueue || [])"` 拉队列
 4. **daemon 推送**：对每个 item：
-   - 解析 `item.target` 找目标 surface id（`cmux tree` 缓存）
+   - 直接取 `item.target_ref`（浮层在 push 时已固化的 `surface:N`，不再按 name 重解析）
+   - 验证 `target_ref` 仍存在于 known surface 列表（每 30s 刷新的 `cmux tree` 缓存）
    - **busy 检测**：`cmux read-screen --surface surface:M --lines 5` 看末尾是否有 idle prompt（如 `❯`/`$`/`>`），非 idle 时跳过该 item，下次重试
    - 发送：`cmux send --surface surface:M <single-line-payload>`（不发 Enter）
 5. **daemon 清队列**：成功推送后 `cmux browser eval "window.__cmuxInspectQueue.splice(0, N); sessionStorage.setItem('__cmuxInspectQueue', JSON.stringify(window.__cmuxInspectQueue))"`
@@ -335,9 +336,14 @@ while True:
 
     consumed_by_source = {}  # surface_id → count
     for item in pending:
-        target_id = resolve_surface(item.get('target') or default_target)
+        # 优先 target_ref（浮层已固化的 surface:N），缺失时才回退到 default_target_ref
+        target_id = item.get('target_ref') or default_target_ref
         if not target_id:
-            log.warn(f"unknown target {item.get('target')}, skip")
+            log.warn(f"item {item['id']} missing target_ref and no default, skip")
+            continue
+        # 验证 target_ref 仍存在（防止 surface 已被关闭）
+        if target_id not in known_surface_ids:
+            log.error(f"target_ref {target_id} no longer exists (was {item.get('target_name')}), skip")
             continue
         if not is_target_idle(target_id):
             log.info(f"target {target_id} busy, defer item {item['id']}")
@@ -487,7 +493,7 @@ print("  2. cmux browser Alt+Click 任意元素试试")
 - **M0**：基础注入 + 监听 + 浮层骨架（浏览器侧能跑）；手动用 `cmux browser eval` 喂 inject.js 验证浮层弹出 + queue push 正常
 - **M1**：daemon 单 browser surface + 单 target 推送；包含 idle 检测和 sessionStorage 兜底
 - **M2**：多 browser surface 合并轮询 + busy 重试 + 错误日志
-- **M3**：CLI 包装 (`init` / `inject` / `uninject` / `doctor` / `watch --start/--status/--stop`) + slash skill 三件套
+- **M3**：CLI 包装 (`init` / `inject` / `doctor` / `watch --target/--status/--stop`) + slash skill 三件套（`/inspect-watch` `/inspect-status` `/inspect-stop`）
 - **M4**：分发包 + npx init + README + tag `v0.1.0` + Pages 演示页
 
 每个 milestone 结束时手动验收：
