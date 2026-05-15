@@ -5,8 +5,8 @@ const os = require('os');
 const { listBrowserSurfaces } = require('../lib/surfaces');
 const { injectTo, readBundle } = require('./inject');
 
-const SKILLS_SRC = path.join(__dirname, '..', '..', 'skills', 'cmux-inspect');
-const SKILLS_DEST = path.join(os.homedir(), '.claude', 'skills', 'cmux-inspect');
+const SKILLS_SRC = path.join(__dirname, '..', '..', 'skills', 'inspect');
+const SKILLS_DEST = path.join(os.homedir(), '.claude', 'skills', 'inspect');
 
 function copySkill() {
   fs.mkdirSync(SKILLS_DEST, { recursive: true });

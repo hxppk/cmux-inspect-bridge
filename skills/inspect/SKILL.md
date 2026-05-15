@@ -1,6 +1,6 @@
 ---
-name: cmux-inspect
-description: cmux browser Alt+Click 元素 → 浮层提需求 → 自动推到目标 terminal surface 输入框（替代截图工作流）。一个 toggle slash command 控制 daemon 开关。Use when 用户输入 /inspect / /inspect-watch / /inspect-status / /inspect-stop / /inspect-on / /inspect-off 或表达 "启动 inspect" "停掉 inspect daemon" "开 inspect 推到 qwen" 这类意图。
+name: inspect
+description: cmux browser Alt+Click 元素 → 浮层提需求 → 自动推到目标 terminal surface 输入框（替代截图工作流）。一个 toggle slash command 控制 daemon 开关。Use when 用户输入 /inspect 或表达 "启动 inspect" "停掉 inspect daemon" "开 inspect 推到 qwen" 这类意图。
 ---
 
 # cmux-inspect
